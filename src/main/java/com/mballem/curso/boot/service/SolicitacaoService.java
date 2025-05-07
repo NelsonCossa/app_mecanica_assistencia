@@ -6,7 +6,7 @@ import com.mballem.curso.boot.domain.Solicitacao;
 
 public interface SolicitacaoService {
 
-    void salvar(Solicitacao solicitacao);
+    Solicitacao salvar(Solicitacao solicitacao);
 
     void editar(Solicitacao solicitacao);
 

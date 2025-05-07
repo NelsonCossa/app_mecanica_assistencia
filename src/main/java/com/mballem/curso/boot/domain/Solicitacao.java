@@ -1,14 +1,17 @@
 package com.mballem.curso.boot.domain;
 
 import jakarta.persistence.*;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "SOLICITACOES")
 public class Solicitacao extends AbstractEntity<Long> {
 
-    @Column(name = "descricao", nullable = false, length = 200)
+    @Column(name = "descricao", nullable = true, length = 200)
     private String descricao;
 
     @Enumerated(EnumType.STRING)
@@ -18,6 +21,49 @@ public class Solicitacao extends AbstractEntity<Long> {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StatusSolicitacao status;
+    @Column(name = "nome_condutor", nullable = false, length = 100)
+    private String nomeCondutor;
+
+    @Column(name = "telefone_condutor", nullable = false, length = 20)
+    private String telefoneCondutor;
+
+    @Column(name = "endereco_completo", nullable = false, length = 255)
+    private String endereco;
+
+    public String getNomeCondutor() {
+		return nomeCondutor;
+	}
+
+	public void setNomeCondutor(String nomeCondutor) {
+		this.nomeCondutor = nomeCondutor;
+	}
+
+	public String getTelefoneCondutor() {
+		return telefoneCondutor;
+	}
+
+	public void setTelefoneCondutor(String telefoneCondutor) {
+		this.telefoneCondutor = telefoneCondutor;
+	}
+
+	public String getEndereco() {
+		return endereco;
+	}
+
+	public void setEndereco(String endereco) {
+		this.endereco = endereco;
+	}
+
+//	public String getDescricaoProblema() {
+//		return descricaoProblema;
+//	}
+//
+//	public void setDescricaoProblema(String descricaoProblema) {
+//		this.descricaoProblema = descricaoProblema;
+//	}
+
+//	@Column(name = "descricao_problema", nullable = false, columnDefinition = "TEXT")
+//    private String descricaoProblema;
 
     @ManyToMany
     @JoinTable(
@@ -25,7 +71,8 @@ public class Solicitacao extends AbstractEntity<Long> {
         joinColumns = @JoinColumn(name = "solicitacao_id"),
         inverseJoinColumns = @JoinColumn(name = "categoria_problema_id")
     )
-    private List<CategoriaProblema> categorias;
+   // private List<CategoriaProblema> categorias;
+    private Set<CategoriaProblema> categorias = new HashSet<>();
 
     public String getDescricao() {
         return descricao;
@@ -51,11 +98,19 @@ public class Solicitacao extends AbstractEntity<Long> {
         this.status = status;
     }
 
-    public List<CategoriaProblema> getCategorias() {
-        return categorias;
-    }
+	public Set<CategoriaProblema> getCategorias() {
+		return categorias;
+	}
 
-    public void setCategorias(List<CategoriaProblema> categorias) {
-        this.categorias = categorias;
-    }
+	public void setCategorias(Set<CategoriaProblema> categorias) {
+		this.categorias = categorias;
+	}
+
+  //  public List<CategoriaProblema> getCategorias() {
+    //    return categorias;
+  //  }
+
+   // public void setCategorias(List<CategoriaProblema> categorias) {
+     //   this.categorias = categorias;
+   // }
 }

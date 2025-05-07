@@ -53,4 +53,6 @@ public class CategoriaProblema {
     public void setSolicitacoes(Set<Solicitacao> solicitacoes) {
         this.solicitacoes = solicitacoes;
     }
+
+	
 }

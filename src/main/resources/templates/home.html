@@ -51,20 +51,26 @@
                 <!-- Mapa -->
                 <div class="map-container" id="map"></div>
 
-                <!-- Botões de Ação -->
-                <div class="p-5 space-y-3">
-                    <button id="mechanic-btn" disabled class="btn-service w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 opacity-70">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <span>Assistência Mecânica</span>
-                    </button>
+                <!-- Formulário de Endereço -->
+                <div class="p-4 border-t border-gray-200">
+                    <div class="mb-4">
+                        <label for="address-input" class="block text-sm font-medium text-gray-700 mb-1">Seu local</label>
+                        <div class="relative">
+                            <input type="text" id="address-input" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Digite ou aguarde a detecção automática" readonly>
+                            <button id="edit-address" class="absolute right-3 top-3 text-blue-600 hover:text-blue-800 hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                     
-                    <button id="tow-btn" disabled class="btn-service w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 opacity-70">
+                    <!-- Botão de Ação -->
+                    <button id="continue-btn" disabled class="btn-service w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 opacity-70">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
-                        <span>Chamar Reboque</span>
+                        <span>Continuar para Solicitação</span>
                     </button>
                 </div>
             </div>
@@ -72,23 +78,35 @@
 
         <!-- Rodapé -->
         <footer class="bg-gray-800 text-white py-4 text-center text-xs">
-            <p>© 2023 SAMR- Todos os direitos reservados</p>
+            <p>© 2023 SAMR - Todos os direitos reservados</p>
         </footer>
     </div>
 
     <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkN6MszvZ7Ic5DwxTB3goW24ohBKJxfYg&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkN6MszvZ7Ic5DwxTB3goW24ohBKJxfYg&libraries=places&callback=initMap" async defer></script>
 
     <script>
         let map;
         let marker;
         let currentPosition = null;
+        let lastPosition = null;
         const statusElement = document.getElementById('location-status');
         const statusIcon = document.getElementById('status-icon');
         const statusText = document.getElementById('status-text');
         const statusDetail = document.getElementById('status-detail');
-        const mechanicBtn = document.getElementById('mechanic-btn');
-        const towBtn = document.getElementById('tow-btn');
+        const addressInput = document.getElementById('address-input');
+        const editAddressBtn = document.getElementById('edit-address');
+        const continueBtn = document.getElementById('continue-btn');
+        let isManualAddress = false;
+        let loadingInterval;
+        let watchId;
+
+        const loadingMessages = [
+            {text: "Buscando satélites GPS...", detail: "Isso é mais rápido em áreas abertas"},
+            {text: "Conectando com torres de celular...", detail: "Usando triangulação de sinal"},
+            {text: "Quase lá...", detail: "Processando sua localização"}
+        ];
+        let messageIndex = 0;
 
         function initMap() {
             // Configuração inicial do mapa
@@ -112,21 +130,98 @@
 
             // Tenta geolocalização automaticamente
             detectLocation();
+            
+            // Configura o autocomplete para o campo de endereço
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                fields: ["formatted_address", "geometry"],
+                types: ["geocode"]
+            });
+            
+            autocomplete.addListener("place_changed", () => {
+                const place = autocomplete.getPlace();
+                if (!place.geometry) {
+                    return;
+                }
+                
+                isManualAddress = true;
+                currentPosition = {
+                    lat: place.geometry.location.lat(),
+                    lng: place.geometry.location.lng()
+                };
+                
+                // Atualiza o mapa
+                map.setCenter(currentPosition);
+                map.setZoom(16);
+                
+                if (marker) {
+                    marker.setPosition(currentPosition);
+                } else {
+                    marker = new google.maps.Marker({
+                        position: currentPosition,
+                        map: map,
+                        animation: google.maps.Animation.DROP,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 8,
+                            fillColor: '#3B82F6',
+                            fillOpacity: 1,
+                            strokeColor: '#FFFFFF',
+                            strokeWeight: 2
+                        }
+                    });
+                }
+                
+                updateStatus('success', 'Localização atualizada!', 'Endereço selecionado manualmente');
+                enableContinueButton();
+            });
+            
+            // Configura o botão de edição de endereço
+            editAddressBtn.addEventListener('click', () => {
+                addressInput.readOnly = false;
+                addressInput.focus();
+                editAddressBtn.classList.add('hidden');
+            });
+            
+            // Configura o botão de continuar
+            continueBtn.addEventListener('click', () => {
+                if (currentPosition) {
+                    const address = addressInput.value.trim();
+                    if (address) {
+                        window.location.href = `/solicitacao/pedido?lat=${currentPosition.lat}&lng=${currentPosition.lng}&address=${encodeURIComponent(address)}`;
+                    } else {
+                        window.location.href = `/solicitacao/pedido?lat=${currentPosition.lat}&lng=${currentPosition.lng}`;
+                    }
+                } else {
+                    window.location.href = "/solicitacao/pedido";
+                }
+            });
         }
 
         function detectLocation() {
             if (navigator.geolocation) {
                 updateStatus('loading', 'Detectando sua localização...', 'Isso acontece automaticamente');
                 
-                // Configurações para alta precisão
+                // Inicia o feedback visual dinâmico
+                loadingInterval = setInterval(() => {
+                    messageIndex = (messageIndex + 1) % loadingMessages.length;
+                    statusText.textContent = loadingMessages[messageIndex].text;
+                    statusDetail.textContent = loadingMessages[messageIndex].detail;
+                }, 2000);
+                
+                // Configurações otimizadas
                 const options = {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+                    enableHighAccuracy: false, // Prioriza velocidade em vez de precisão
+                    timeout: 5000, // Tempo máximo de espera reduzido
+                    maximumAge: 30000 // Aceita uma localização com até 30 segundos
                 };
                 
-                navigator.geolocation.getCurrentPosition(
+                // Tenta primeiro com watchPosition para obter localização mais rápido
+                watchId = navigator.geolocation.watchPosition(
                     position => {
+                        // Limpa o watch assim que obtiver a primeira posição
+                        navigator.geolocation.clearWatch(watchId);
+                        clearInterval(loadingInterval);
+                        
                         const pos = {
                             lat: position.coords.latitude,
                             lng: position.coords.longitude,
@@ -135,7 +230,24 @@
                         handleLocationSuccess(pos);
                     },
                     error => {
-                        handleLocationError(error);
+                        navigator.geolocation.clearWatch(watchId);
+                        // Se watchPosition falhar, tenta getCurrentPosition como fallback
+                        navigator.geolocation.getCurrentPosition(
+                            position => {
+                                clearInterval(loadingInterval);
+                                const pos = {
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude,
+                                };
+                                currentPosition = pos;
+                                handleLocationSuccess(pos);
+                            },
+                            error => {
+                                clearInterval(loadingInterval);
+                                handleLocationError(error);
+                            },
+                            options
+                        );
                     },
                     options
                 );
@@ -145,34 +257,44 @@
         }
 
         function handleLocationSuccess(position) {
+            // Armazena a última posição válida
+            lastPosition = position;
+            
             map.setCenter(position);
             map.setZoom(16);
             
-            marker = new google.maps.Marker({
-                position: position,
-                map: map,
-                animation: google.maps.Animation.DROP,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 8,
-                    fillColor: '#3B82F6',
-                    fillOpacity: 1,
-                    strokeColor: '#FFFFFF',
-                    strokeWeight: 2
+            if (!marker) {
+                marker = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    animation: google.maps.Animation.DROP,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 8,
+                        fillColor: '#3B82F6',
+                        fillOpacity: 1,
+                        strokeColor: '#FFFFFF',
+                        strokeWeight: 2
+                    }
+                });
+            } else {
+                marker.setPosition(position);
+            }
+
+            // Usar o Geocoder para obter o endereço formatado
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: position }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    const formattedAddress = results[0].formatted_address;
+                    addressInput.value = formattedAddress;
+                    editAddressBtn.classList.remove('hidden');
+                    updateStatus('success', 'Localização detectada!', 'Verifique o endereço e continue');
+                } else {
+                    addressInput.value = `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`;
+                    updateStatus('success', 'Coordenadas obtidas', 'Não foi possível obter o endereço completo');
                 }
+                enableContinueButton();
             });
-
-            updateStatus('success', 'Localização detectada!', 'Pronto para solicitar assistência');
-            
-            // Ativa os botões
-            mechanicBtn.disabled = false;
-            mechanicBtn.classList.remove('opacity-70');
-            towBtn.disabled = false;
-            towBtn.classList.remove('opacity-70');
-
-            // Adiciona eventos aos botões
-            mechanicBtn.addEventListener('click', () => requestService('mechanic'));
-            towBtn.addEventListener('click', () => requestService('tow'));
         }
 
         function handleLocationError(error) {
@@ -193,9 +315,96 @@
             
             // Mostra mapa genérico como fallback
             showDefaultMap();
+            
+            // Tenta obter localização aproximada pelo IP
+            getLocationByIP();
+            
+            // Permite ao usuário digitar o endereço manualmente
+            addressInput.readOnly = false;
+            enableContinueButton();
         }
 
+        function getLocationByIP() {
+            fetch('https://ipapi.co/json/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.latitude && data.longitude) {
+                        currentPosition = {
+                            lat: parseFloat(data.latitude),
+                            lng: parseFloat(data.longitude)
+                        };
+                        addressInput.value = `${data.city || ''}, ${data.region || ''}, ${data.country_name || ''}`.replace(/^, /, '').replace(/, ,/g, ',');
+                        updateStatus('success', 'Localização aproximada', 'Determinada pelo seu IP');
+                        enableContinueButton();
+                        
+                        // Centraliza o mapa na localização aproximada
+                        map.setCenter(currentPosition);
+                        map.setZoom(12);
+                        
+                        if (marker) {
+                            marker.setPosition(currentPosition);
+                        } else {
+                            marker = new google.maps.Marker({
+                                position: currentPosition,
+                                map: map,
+                                icon: {
+                                    path: google.maps.SymbolPath.CIRCLE,
+                                    scale: 8,
+                                    fillColor: '#F59E0B',
+                                    fillOpacity: 1,
+                                    strokeColor: '#FFFFFF',
+                                    strokeWeight: 2
+                                }
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao obter localização por IP:", error);
+                });
+        }
+
+        function showDefaultMap() {
+            // Usa a última posição conhecida se disponível
+            if (lastPosition) {
+                map.setCenter(lastPosition);
+                map.setZoom(12);
+                if (marker) {
+                    marker.setPosition(lastPosition);
+                }
+                return;
+            }
+            
+            // Fallback padrão (Brasília)
+            const defaultPosition = { lat: -15.795, lng: -47.891 };
+            
+            if (marker) {
+                marker.setPosition(defaultPosition);
+            } else {
+                marker = new google.maps.Marker({
+                    position: defaultPosition,
+                    map: map,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 8,
+                        fillColor: '#EF4444',
+                        fillOpacity: 1,
+                        strokeColor: '#FFFFFF',
+                        strokeWeight: 2
+                    }
+                });
+            }
+            
+            map.setCenter(defaultPosition);
+            map.setZoom(4);
+        }
+        
         function updateStatus(type, text, detail) {
+            // Limpa o intervalo de mensagens de loading se existir
+            if (type !== 'loading' && loadingInterval) {
+                clearInterval(loadingInterval);
+            }
+            
             statusText.textContent = text;
             statusDetail.textContent = detail;
             
@@ -219,52 +428,9 @@
             }
         }
 
-        function showDefaultMap() {
-            // Posição fallback (Brasília)
-            const defaultPosition = { lat: -15.795, lng: -47.891 };
-            
-            marker = new google.maps.Marker({
-                position: defaultPosition,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 8,
-                    fillColor: '#EF4444',
-                    fillOpacity: 1,
-                    strokeColor: '#FFFFFF',
-                    strokeWeight: 2
-                }
-            });
-            
-            map.setCenter(defaultPosition);
-            map.setZoom(12);
-        }
-
-        function requestService(serviceType) {
-            if (!currentPosition) return;
-            
-            const serviceName = serviceType === 'mechanic' ? 'Assistência Mecânica' : 'Reboque';
-            
-            // Feedback visual
-            updateStatus('loading', `Enviando solicitação...`, `Aguarde enquanto processamos seu pedido de ${serviceName}`);
-            
-            // Desativa os botões durante o processamento
-            mechanicBtn.disabled = true;
-            towBtn.disabled = true;
-            
-            // Simula envio da solicitação
-            setTimeout(() => {
-                updateStatus('success', `Solicitação confirmada!`, `Um profissional de ${serviceName} está a caminho`);
-                
-                // Aqui você faria a requisição real para seu backend
-                console.log(`${serviceName} solicitado para:`, currentPosition);
-                
-                // Reativa os botões após 5 segundos
-                setTimeout(() => {
-                    mechanicBtn.disabled = false;
-                    towBtn.disabled = false;
-                }, 5000);
-            }, 1500);
+        function enableContinueButton() {
+            continueBtn.disabled = false;
+            continueBtn.classList.remove('opacity-70');
         }
     </script>
 </body>

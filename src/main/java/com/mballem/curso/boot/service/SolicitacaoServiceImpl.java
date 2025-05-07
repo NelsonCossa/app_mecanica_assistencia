@@ -16,8 +16,9 @@ public class SolicitacaoServiceImpl implements SolicitacaoService {
     private SolicitacaoDao dao;
 
     @Override
-    public void salvar(Solicitacao solicitacao) {
+    public Solicitacao salvar(Solicitacao solicitacao) {
         dao.save(solicitacao);
+		return solicitacao;
     }
 
     @Override

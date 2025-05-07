@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Serviço | AutoAssist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .category-card {
+            transition: all 0.3s ease;
+        }
+        .category-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .category-card.selected {
+            border-color: #3B82F6;
+            background-color: #EFF6FF;
+        }
+        textarea {
+            resize: none;
+        }
+        .service-type-btn.selected {
+            border-width: 2px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Cabeçalho -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Solicitar Serviço</h1>
+            <p class="text-gray-600">Descreva seu problema para enviarmos o profissional adequado</p>
+        </header>
+
+        <!-- Conteúdo Principal -->
+        <main class="max-w-2xl mx-auto">
+            <!-- Cartão do Formulário -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <!-- Formulário -->
+                <form class="p-6 md:p-8 space-y-6" th:action="@{/solicitacao/processar}" method="post">
+                    <!-- Seção de Informações do Cliente -->
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Informações do Cliente</h2>
+                        
+                        <!-- Nome do Condutor -->
+                        <div class="mb-4">
+                            <label for="driver-name" class="block text-sm font-medium text-gray-700 mb-1">Nome do Condutor *</label>
+                            <input 
+                                type="text" 
+                                id="driver-name" 
+                                name="nomeCondutor"
+                                required
+                                placeholder="Nome completo do condutor"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            >
+                        </div>
+                        
+                        <!-- Telefone do Condutor -->
+                        <div class="mb-4">
+                            <label for="driver-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone do Condutor *</label>
+                            <input 
+                                type="tel" 
+                                id="driver-phone" 
+                                name="telefoneCondutor"
+                                required
+                                placeholder="Número de telefone com código de área"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            >
+                        </div>
+                        
+                        <!-- Endereço -->
+                        <div>
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Endereço *</label>
+                            <input 
+                                type="text" 
+                                id="address" 
+                                name="endereco"
+                                required
+                                th:value="${enderecoFormatado != null} ? ${enderecoFormatado} : (${coordenadas != null} ? ${coordenadas} : '')"
+                                placeholder="Localização atual do veículo"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Seção de Tipo de Serviço -->
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Tipo de Serviço *</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label class="service-type-btn bg-red-50 border-2 border-red-100 text-red-800 font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 cursor-pointer">
+                              
+								
+								<input type="radio" name="tipoServico" value="REBOQUE" class="hidden" required>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                <span>Reboque</span>
+                            </label>
+                            
+                            <label class="service-type-btn bg-green-50 border-2 border-green-100 text-green-800 font-medium py-3 px-4 rounded-lg flex items-center justify-center space-x-2 cursor-pointer">
+                               
+								<input type="radio" name="tipoServico" value="MECANICA" class="hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <span>Assistência Mecânica</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Categorias de Problema -->
+                    <div id="problem-categories-section">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Categorias do Problema *</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div th:each="categoria : ${categorias}" class="flex items-center">
+                                <input 
+                                    type="checkbox" 
+                                    th:id="${'category-' + categoria.id}"
+                                    th:value="${categoria.id}"
+                                    name="categorias"
+                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                >
+                                <label 
+                                    th:for="${'category-' + categoria.id}" 
+                                    class="ml-2 block text-sm text-gray-700"
+                                    th:text="${categoria.nome}"
+                                ></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Descrição do Problema -->
+                    <div>
+                        <label for="problem-description" class="block text-sm font-medium text-gray-700 mb-1">Descreva o problema *</label>
+                        <textarea 
+                            id="problem-description" 
+                            name="descricao"
+                            rows="4"
+                            required
+                            placeholder="Descreva com detalhes o problema que está enfrentando..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        ></textarea>
+                    </div>
+
+                    <!-- Botão de Envio -->
+                    <div class="pt-4">
+                        <button 
+                            type="submit"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition flex items-center justify-center"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                            Solicitar Serviço
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Seleção automática do tipo de serviço se veio por parâmetro
+        document.addEventListener('DOMContentLoaded', function() {
+            const tipoServico = document.querySelector('input[name="tipoServico"][value="${tipoServicoPreSelecionado}"]');
+            if (tipoServico) {
+                tipoServico.checked = true;
+                tipoServico.closest('label').classList.add('selected', 'border-blue-500');
+            }
+        });
+
+        // Seleção do tipo de serviço
+        const serviceTypeBtns = document.querySelectorAll('.service-type-btn');
+        serviceTypeBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove seleção de todos
+                serviceTypeBtns.forEach(b => {
+                    b.classList.remove('selected', 'border-blue-500');
+                    b.classList.add('border-red-100', 'border-green-100');
+                });
+                
+                // Adiciona seleção ao clicado
+                this.classList.add('selected', 'border-blue-500');
+                this.classList.remove('border-red-100', 'border-green-100');
+                
+                // Marca o radio button correspondente
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+            });
+        });
+
+        // Validação do formulário antes do envio
+        document.querySelector('form').addEventListener('submit', function(e) {
+            // Verifica se um tipo de serviço foi selecionado
+            const selectedService = document.querySelector('input[name="tipoServico"]:checked');
+            if (!selectedService) {
+                alert('Por favor, selecione o tipo de serviço');
+                e.preventDefault();
+                return;
+            }
+            
+            // Verifica se pelo menos uma categoria foi selecionada
+            const selectedCategories = document.querySelectorAll('input[name="categorias"]:checked');
+            if (selectedCategories.length === 0) {
+                alert('Por favor, selecione pelo menos uma categoria');
+                e.preventDefault();
+                return;
+            }
+            
+            // Verifica campos obrigatórios
+            const requiredFields = ['driver-name', 'driver-phone', 'address', 'problem-description'];
+            let isValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field.value.trim() === '') {
+                    field.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+            
+            if (!isValid) {
+                alert('Por favor, preencha todos os campos obrigatórios');
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
