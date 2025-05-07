@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Built-By: administrator
+Build-Jdk: 21.0.6
+Implementation-Title: demo-mvc
+Implementation-Version: 0.0.1-SNAPSHOT
+Implementation-Vendor-Id: com.mballem.curso.boot
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-boot
+ -starter-parent/demo-mvc
+Created-By: Maven Integration for Eclipse
+
