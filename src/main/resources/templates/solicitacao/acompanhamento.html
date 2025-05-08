@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhar Pedido | AutoAssist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="font-sans bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <!-- Cabeçalho -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Acompanhe seu Pedido</h1>
+            <p class="text-gray-600">Veja o status atual do seu serviço solicitado</p>
+        </header>
+
+        <!-- Card Principal -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <!-- Status do Pedido -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                    <div>
+                        <p class="text-sm text-gray-500">
+                            Solicitado em: 
+                          
+                        </p>
+                    </div>
+                    <div>
+                          <span th:text="${solicitacao.status}"></span>
+                         
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalhes do Pedido -->
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Informações do Serviço -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">Detalhes do Serviço</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Tipo de Serviço</p>
+                                <p class="font-medium flex items-center">
+                                    <i th:class="${solicitacao.tipoServico == 'REBOQUE'} ? 
+                                               'fas fa-truck-pickup text-blue-600 mr-2' : 
+                                               'fas fa-tools text-green-600 mr-2'"></i>
+                                    <span th:text="${solicitacao.tipoServico}"></span>
+                                </p>
+                            </div>
+                            
+                            <div th:if="${not #lists.isEmpty(solicitacao.categorias)}">
+                                <p class="text-sm text-gray-500">Categoria(s) do Problema</p>
+                                <p class="font-medium" th:each="categoria : ${solicitacao.categorias}" 
+                                   th:text="${categoria.nome}"></p>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm text-gray-500">Descrição</p>
+                                <p class="font-medium" th:text="${solicitacao.descricao}"></p>
+                            </div>
+                            
+                            <div>
+                                <p class="text-sm text-gray-500">Localização</p>
+                                <p class="font-medium flex items-center">
+                                    <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                                    <span th:text="${solicitacao.endereco}"></span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Informações do Prestador -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">Prestador Designado</h3>
+                        
+                        <div class="flex items-center mb-4"> 
+                           
+                            <div>
+                               
+                            </div>
+                        </div>
+                        
+                      
+                        <div  class="text-center py-4">
+                            <p class="text-gray-500">Aguardando designação de prestador...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

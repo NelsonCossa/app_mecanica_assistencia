@@ -59,6 +59,26 @@ public class SolicitacaoController {
         return "solicitacao/pedido";
     }
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+//    @PostMapping("/processar")
+//    public String processarSolicitacao(
+//            @RequestParam String nomeCondutor,
+//            @RequestParam String telefoneCondutor,
+//            @RequestParam String endereco,
+//            @RequestParam String descricao,
+//            @RequestParam String tipoServico,
+//            @RequestParam(value = "categorias", required = false) List<Long> categoriasIds,
+//            RedirectAttributes redirectAttributes) {
+    
     @PostMapping("/processar")
     public String processarSolicitacao(
             @RequestParam String nomeCondutor,
@@ -93,11 +113,27 @@ public class SolicitacaoController {
         redirectAttributes.addFlashAttribute("success", 
                 "Solicitação #" + novaSolicitacao.getId() + " enviada com sucesso!");
         
-        return "redirect:/solicitacao/confirmacao";
+       // return "redirect:/solicitacao/confirmacao";
+        
+        return "redirect:/solicitacao/acompanhar/" + novaSolicitacao.getId();
+    }
+    @GetMapping("/acompanhar/{id}")
+    public String mostrarAcompanhamento(@PathVariable("id") Long id, Model model) {
+        Solicitacao solicitacao = solicitacaoService.buscarPorId(id);
+        
+        if (solicitacao == null) {
+            throw new RuntimeException("Solicitação não encontrada com ID: " + id);
+        }
+        
+        model.addAttribute("solicitacao", solicitacao);
+        
+        // Você pode adicionar mais lógica aqui para buscar informações do prestador, etc.
+        
+        return "solicitacao/acompanhamento";
     }
 
-    @GetMapping("/confirmacao")
-    public String mostrarConfirmacao() {
-        return "solicitacao/confirmacao";
-    }
+//    @GetMapping("/confirmacao")
+//    public String mostrarConfirmacao() {
+//        return "solicitacao/confirmacao";
+//    }
 }
