@@ -2,6 +2,8 @@ package com.mballem.curso.boot.domain;
 
 import jakarta.persistence.*;
 
+import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,8 +15,22 @@ public class Solicitacao extends AbstractEntity<Long> {
 
     @Column(name = "descricao", nullable = true, length = 200)
     private String descricao;
+    @Column(name = "data_solicitacao") // Mapeia para o nome da coluna no banco
+    private LocalDateTime data_solicitacao; // Use LocalDateTime em vez de Date
 
-    @Enumerated(EnumType.STRING)
+    
+
+	
+
+	public LocalDateTime getDataSolicitacao() {
+		return data_solicitacao;
+	}
+
+	public void setDataSolicitacao(LocalDateTime dataSolicitacao) {
+		this.data_solicitacao = dataSolicitacao;
+	}
+
+	@Enumerated(EnumType.STRING)
     @Column(name = "tipo_servico", nullable = false)
     private TipoServico tipoServico;
 

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Solicitação</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 max-w-3xl mx-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <span th:class="${solicitacao.tipoServico == 'MECANICA'} ? 
+                                      'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                              class="px-3 py-1 rounded-full text-xs font-semibold">
+                            <span th:text="${solicitacao.tipoServico == 'MECANICA'} ? 'Mecânica' : 'Reboque'"></span>
+                        </span>
+                        <h1 class="text-2xl font-bold text-gray-800 mt-2" th:text="${solicitacao.titulo}"></h1>
+                    </div>
+                    <span class="text-sm text-gray-500" th:text="${#dates.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}"></span>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-2">Descrição</h2>
+                    <p class="text-gray-600" th:text="${solicitacao.descricao != null} ? ${solicitacao.descricao} : 'Sem descrição adicional'"></p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-2">Localização</h2>
+                        <div class="flex items-center text-gray-600">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span th:text="${solicitacao.localizacao}"></span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-2">Cliente</h2>
+                        <div class="flex items-center text-gray-600">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span th:text="${solicitacao.nomeCliente}"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-4">
+                    <a th:href="@{/solicitacoes/disponiveis}" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                        Voltar
+                    </a>
+                    <form th:action="@{/solicitacoes/aceitar}" method="post">
+                        <input type="hidden" name="id" th:value="${solicitacao.id}">
+                        <input type="hidden" name="prestadorId" th:value="${#authentication.principal.id}">
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            Aceitar Solicitação
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
